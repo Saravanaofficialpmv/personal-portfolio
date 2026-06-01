@@ -692,26 +692,26 @@
       } catch (e) {}
     }
 
-    // Set countdown target to exactly 14 Days, 0 Hours, 46 Minutes, 9 Seconds from first page load
-    let targetTimestamp = safeGetItem('countdown_target_timestamp');
+    // Set countdown target to exactly 15 Days, 0 Hours, 46 Minutes, 9 Seconds from first page load
+    let targetTimestamp = safeGetItem('countdown_target_timestamp_v2');
     
     if (!targetTimestamp) {
       const initialTarget = new Date();
-      initialTarget.setDate(initialTarget.getDate() + 14);
+      initialTarget.setDate(initialTarget.getDate() + 15);
       initialTarget.setHours(initialTarget.getHours() + 0);
       initialTarget.setMinutes(initialTarget.getMinutes() + 46);
       initialTarget.setSeconds(initialTarget.getSeconds() + 9);
       
       targetTimestamp = initialTarget.getTime();
-      safeSetItem('countdown_target_timestamp', targetTimestamp.toString());
+      safeSetItem('countdown_target_timestamp_v2', targetTimestamp.toString());
     } else {
       targetTimestamp = parseInt(targetTimestamp, 10);
       // Auto-reset target to a clean future time if it has already passed, keeping the presentation active
       if (isNaN(targetTimestamp) || targetTimestamp <= Date.now()) {
         const resetTarget = new Date();
-        resetTarget.setDate(resetTarget.getDate() + 14);
+        resetTarget.setDate(resetTarget.getDate() + 15);
         targetTimestamp = resetTarget.getTime();
-        safeSetItem('countdown_target_timestamp', targetTimestamp.toString());
+        safeSetItem('countdown_target_timestamp_v2', targetTimestamp.toString());
       }
     }
 
