@@ -677,8 +677,23 @@
       seconds: document.getElementById('seconds-val')
     };
 
+    // Browser-safe localStorage wrappers to prevent security exceptions in private browsing mode
+    function safeGetItem(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function safeSetItem(key, val) {
+      try {
+        localStorage.setItem(key, val);
+      } catch (e) {}
+    }
+
     // Set countdown target to exactly 14 Days, 0 Hours, 46 Minutes, 9 Seconds from first page load
-    let targetTimestamp = localStorage.getItem('countdown_target_timestamp');
+    let targetTimestamp = safeGetItem('countdown_target_timestamp');
     
     if (!targetTimestamp) {
       const initialTarget = new Date();
@@ -688,15 +703,15 @@
       initialTarget.setSeconds(initialTarget.getSeconds() + 9);
       
       targetTimestamp = initialTarget.getTime();
-      localStorage.setItem('countdown_target_timestamp', targetTimestamp);
+      safeSetItem('countdown_target_timestamp', targetTimestamp.toString());
     } else {
       targetTimestamp = parseInt(targetTimestamp, 10);
       // Auto-reset target to a clean future time if it has already passed, keeping the presentation active
-      if (targetTimestamp <= Date.now()) {
+      if (isNaN(targetTimestamp) || targetTimestamp <= Date.now()) {
         const resetTarget = new Date();
         resetTarget.setDate(resetTarget.getDate() + 14);
         targetTimestamp = resetTarget.getTime();
-        localStorage.setItem('countdown_target_timestamp', targetTimestamp);
+        safeSetItem('countdown_target_timestamp', targetTimestamp.toString());
       }
     }
 
