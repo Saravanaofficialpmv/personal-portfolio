@@ -166,7 +166,7 @@ ol {
     background: linear-gradient(120deg, rgb(255 255 255 / 12%), rgb(255 255 255 / 1%));
     content: '';
     z-index: -1;
-    border-radius: 1%;
+    border-radius: inherit;
     margin: -1px;
 }
 
@@ -768,7 +768,7 @@ ol {
     padding-top: 65px;
 }
 .projects-area .container > .section-heading {
-    display: none;
+    display: flex;
 }
 .projects-area .section-heading {
     justify-content: center;
@@ -1550,6 +1550,8 @@ ol {
     margin-bottom: 0;
 }
 .contact-area .social-links {
+    display: flex;
+    flex-wrap: wrap;
     gap: 20px;
 }
 .contact-area .social-links li a {
