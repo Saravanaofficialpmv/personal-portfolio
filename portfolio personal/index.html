@@ -677,68 +677,43 @@
       seconds: document.getElementById('seconds-val')
     };
 
-    // Browser-safe localStorage wrappers to prevent security exceptions in private browsing mode
-    function safeGetItem(key) {
-      try {
-        return localStorage.getItem(key);
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function safeSetItem(key, val) {
-      try {
-        localStorage.setItem(key, val);
-      } catch (e) {}
-    }
-
-    // Set countdown target to exactly 15 Days, 0 Hours, 46 Minutes, 9 Seconds from first page load
-    let targetTimestamp = safeGetItem('countdown_target_timestamp_v2');
-    
-    if (!targetTimestamp) {
-      const initialTarget = new Date();
-      initialTarget.setDate(initialTarget.getDate() + 15);
-      initialTarget.setHours(initialTarget.getHours() + 0);
-      initialTarget.setMinutes(initialTarget.getMinutes() + 46);
-      initialTarget.setSeconds(initialTarget.getSeconds() + 9);
-      
-      targetTimestamp = initialTarget.getTime();
-      safeSetItem('countdown_target_timestamp_v2', targetTimestamp.toString());
-    } else {
-      targetTimestamp = parseInt(targetTimestamp, 10);
-      // Auto-reset target to a clean future time if it has already passed, keeping the presentation active
-      if (isNaN(targetTimestamp) || targetTimestamp <= Date.now()) {
-        const resetTarget = new Date();
-        resetTarget.setDate(resetTarget.getDate() + 15);
-        targetTimestamp = resetTarget.getTime();
-        safeSetItem('countdown_target_timestamp_v2', targetTimestamp.toString());
-      }
-    }
+    // Set a global fixed target date: exactly 15 days from the June 1st baseline
+    // 2026-06-16 at 08:02:17 AM (GMT+5:30)
+    const targetTimestamp = new Date('2026-06-16T08:02:17+05:30').getTime();
+    let timerInterval = null;
 
     function formatNumber(num) {
       return num.toString().padStart(2, '0');
     }
 
-    function updateDOMValue(element, newValue) {
+    function updateDOMValue(element, newValue, shouldAnimate) {
       if (element.textContent !== newValue) {
         element.textContent = newValue;
-        // Trigger micro-animation class on value change
-        element.classList.remove('digit-animate');
-        // Force reflow to restart CSS animation
-        void element.offsetWidth;
-        element.classList.add('digit-animate');
+        
+        if (shouldAnimate) {
+          // Trigger micro-animation class on value change
+          element.classList.remove('digit-animate');
+          // Force reflow to restart CSS animation
+          void element.offsetWidth;
+          element.classList.add('digit-animate');
+        }
       }
     }
 
-    function updateCountdown() {
+    function updateCountdown(shouldAnimate = true) {
       const now = Date.now();
       const difference = targetTimestamp - now;
 
       if (difference <= 0) {
-        updateDOMValue(DOM_ELEMENTS.days, '00');
-        updateDOMValue(DOM_ELEMENTS.hours, '00');
-        updateDOMValue(DOM_ELEMENTS.minutes, '00');
-        updateDOMValue(DOM_ELEMENTS.seconds, '00');
+        updateDOMValue(DOM_ELEMENTS.days, '00', shouldAnimate);
+        updateDOMValue(DOM_ELEMENTS.hours, '00', shouldAnimate);
+        updateDOMValue(DOM_ELEMENTS.minutes, '00', shouldAnimate);
+        updateDOMValue(DOM_ELEMENTS.seconds, '00', shouldAnimate);
+        
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
         return;
       }
 
@@ -748,17 +723,26 @@
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-      updateDOMValue(DOM_ELEMENTS.days, formatNumber(days));
-      updateDOMValue(DOM_ELEMENTS.hours, formatNumber(hours));
-      updateDOMValue(DOM_ELEMENTS.minutes, formatNumber(minutes));
-      updateDOMValue(DOM_ELEMENTS.seconds, formatNumber(seconds));
+      updateDOMValue(DOM_ELEMENTS.days, formatNumber(days), shouldAnimate);
+      updateDOMValue(DOM_ELEMENTS.hours, formatNumber(hours), shouldAnimate);
+      updateDOMValue(DOM_ELEMENTS.minutes, formatNumber(minutes), shouldAnimate);
+      updateDOMValue(DOM_ELEMENTS.seconds, formatNumber(seconds), shouldAnimate);
     }
 
-    // Run first calculation and set interval
-    updateCountdown();
-    const timerInterval = setInterval(updateCountdown, 1000);
+    // Run first calculation immediately without animating transitions to avoid initial page-load flashes
+    updateCountdown(false);
 
+    // Set interval for continuous ticking
+    timerInterval = setInterval(() => {
+      updateCountdown(true);
+    }, 1000);
 
+    // Immediately synchronize the timer UI when tab visibility changes (handles background tab throttling)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        updateCountdown(false);
+      }
+    });
   </script>
 </body>
 </html>
